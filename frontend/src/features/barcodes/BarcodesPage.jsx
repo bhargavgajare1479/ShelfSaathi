@@ -346,12 +346,30 @@ export function BarcodesPage() {
                     <AlertCircle className="w-8 h-8" />
                   </div>
                   <h4 className="text-base font-bold text-text-primary">
-                    Barcode Not in Catalogue
+                    Barcode Not in Local Catalogue
                   </h4>
-                  <p className="text-xs text-text-secondary max-w-xs mx-auto">
-                    Barcode <span className="font-mono font-semibold">{scanResult.barcode}</span> was
-                    not found in your registered store products.
-                  </p>
+
+                  {scanResult.external_product ? (
+                    <div className="bg-sky-50 border border-sky-200 rounded-lg p-3 text-left max-w-sm mx-auto space-y-1">
+                      <div className="text-[10px] uppercase font-bold text-sky-700 tracking-wider">
+                        Found in Open Food Facts
+                      </div>
+                      <div className="text-sm font-bold text-text-primary">
+                        {scanResult.external_product.name}
+                      </div>
+                      {scanResult.external_product.brand && (
+                        <div className="text-xs text-text-muted">
+                          Brand: {scanResult.external_product.brand}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-text-secondary max-w-xs mx-auto">
+                      Barcode <span className="font-mono font-semibold">{scanResult.barcode}</span> was
+                      not found in your registered store products.
+                    </p>
+                  )}
+
                   <Button
                     variant="primary"
                     onClick={() => {

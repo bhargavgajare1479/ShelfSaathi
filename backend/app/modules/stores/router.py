@@ -197,3 +197,21 @@ async def add_store_member(
         },
         request_id=request_id,
     )
+
+
+@router.post("/{store_id}/seed", response_model=SuccessResponse[dict])
+async def seed_demo_data(
+    store_id: str,
+    context: StoreContext = Depends(require_store_role(StoreRole.OWNER)),
+    db: Session = Depends(get_db),
+    request_id: str = Depends(get_request_id),
+):
+    """
+    Seed realistic Indian Kirana retail products, barcodes, and sales history.
+    Restricted to Store Owners. Conforms to DATABASE.md Section 11.
+    """
+    from app.db.seed import seed_store_demo_data
+
+    store_uuid = uuid.UUID(store_id)
+    summary = seed_store_demo_data(store_uuid, db)
+    return SuccessResponse(data=summary, request_id=request_id)

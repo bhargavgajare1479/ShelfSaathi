@@ -41,3 +41,13 @@ export async function deleteStoreProduct(storeId, productId, token = null) {
   )
 }
 
+export async function seedStoreDemoDataApi(storeId, token = null) {
+  return await apiRequest(
+    `/stores/${storeId}/seed`,
+    {
+      method: 'POST',
+    },
+    token
+  )
+}
+

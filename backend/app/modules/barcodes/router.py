@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.api.dependencies import get_current_store, get_db, get_request_id
 from app.core.security import StoreContext
 from app.db.models import Inventory, Product
+from app.integrations.open_food_facts import open_food_facts_client
 from app.schemas.common import SuccessResponse
 
 router = APIRouter(prefix="/stores/{store_id}/barcodes", tags=["Barcodes & Labels"])
@@ -75,11 +76,15 @@ async def lookup_barcode(
             request_id=request_id,
         )
 
+    # If not found in catalogue, attempt external lookup via Open Food Facts
+    ext_product = await open_food_facts_client.lookup(clean_barcode)
+
     return SuccessResponse(
         data={
             "barcode": clean_barcode,
             "found_in_catalogue": False,
             "product": None,
+            "external_product": ext_product,
             "suggested_action": "register_new_product",
         },
         request_id=request_id,

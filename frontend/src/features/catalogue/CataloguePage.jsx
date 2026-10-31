@@ -11,6 +11,7 @@ import {
   createStoreProduct,
   updateStoreProduct,
   deleteStoreProduct,
+  seedStoreDemoDataApi,
 } from './api'
 import { generateBarcodeApi } from '../barcodes/api'
 import {
@@ -38,6 +39,7 @@ export function CataloguePage() {
   const [formSubmitting, setFormSubmitting] = useState(false)
   const [formError, setFormError] = useState(null)
   const [generatingBarcode, setGeneratingBarcode] = useState(false)
+  const [seeding, setSeeding] = useState(false)
 
   // Form inputs
   const [formData, setFormData] = useState({
@@ -146,6 +148,22 @@ export function CataloguePage() {
     }
   }
 
+  const handleSeedDemoData = async () => {
+    if (!activeStore) return
+    if (!window.confirm('Load 12 realistic Indian Kirana retail products (Atta, Oil, Salt, Maggi, Parle-G, Milk, Soap) with barcodes and sales history?')) {
+      return
+    }
+    setSeeding(true)
+    try {
+      await seedStoreDemoDataApi(activeStore.id, token)
+      await loadProducts()
+    } catch (err) {
+      alert('Could not seed demo data: ' + err.message)
+    } finally {
+      setSeeding(false)
+    }
+  }
+
   const handleDelete = async (prod) => {
     if (!window.confirm(`Delete "${prod.name}" from catalogue? This will also remove its inventory history.`)) {
       return
@@ -169,6 +187,16 @@ export function CataloguePage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            onClick={handleSeedDemoData}
+            loading={seeding}
+            className="flex items-center gap-1.5 text-primary border-primary/30 hover:bg-primary-subtle"
+            title="Populate authentic Indian Kirana products with barcodes"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span className="hidden sm:inline">Load Kirana Demo Data</span>
+          </Button>
           <Button variant="secondary" onClick={loadProducts} className="flex items-center gap-1.5">
             <RefreshCw className="w-4 h-4" />
             <span className="hidden sm:inline">Refresh</span>
@@ -219,10 +247,21 @@ export function CataloguePage() {
               ? 'Try adjusting your search terms or register this item now.'
               : 'Add products manually or confirm your first supplier invoice to automatically populate your catalogue.'}
           </p>
-          <Button variant="primary" onClick={openAddModal} className="flex items-center gap-2 mx-auto">
-            <Plus className="w-4 h-4" />
-            <span>Add First Product</span>
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Button
+              variant="secondary"
+              onClick={handleSeedDemoData}
+              loading={seeding}
+              className="flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span>Load 12 Realistic Kirana Items</span>
+            </Button>
+            <Button variant="primary" onClick={openAddModal} className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              <span>Add First Product Manually</span>
+            </Button>
+          </div>
         </Card>
       ) : (
         <Card className="overflow-hidden p-0 border border-border-default">
