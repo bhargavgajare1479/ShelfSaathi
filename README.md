@@ -1,115 +1,190 @@
 # ShelfSaathi
 
-ShelfSaathi is a planned mobile-first inventory and purchasing assistant for small retailers.
+ShelfSaathi is a mobile-first inventory and purchasing assistant for kirana stores and small retailers.
 
-It aims to reduce manual stock administration by turning supplier invoices into reviewable inventory updates and helping merchants decide what to replenish.
-
-## Features
-
-The repository currently contains product and implementation documentation only; none of the application features below are implemented here.
-
-Planned MVP capabilities:
-
-- Authenticate merchants and provide store-scoped access.
-- Extract product and quantity details from invoice images for merchant review; update stock only after confirmation.
-- Manage product barcodes and prepare printable labels.
-- Provide explainable reorder suggestions based on available, clearly identified data.
-- Create editable purchase-order drafts without placing orders automatically.
-
-Supplier ordering, Sales Booster, and multilingual assistance are described as broader product goals, but are not part of the documented MVP API.
+It reduces manual stock administration by turning supplier invoices into reviewable inventory updates, managing barcodes and labels, and helping merchants decide what to replenish through explainable reorder recommendations.
 
 ## Tech Stack
 
-The project documents select this intended stack; no dependencies are installed or application code is present yet:
+The project foundation is initialized according to the approved architecture in [ARCHITECTURE.md](docs/ARCHITECTURE.md):
 
-- **Frontend:** React, Vite, JavaScript, and Tailwind CSS.
-- **Backend:** Python and FastAPI, as a single modular monolith.
-- **Data and identity:** Supabase PostgreSQL and Supabase Auth; private Supabase Storage is proposed for invoice images.
-- **Hosting direction:** Vercel for the frontend and Render (or an equivalent managed Python host) for the backend.
-
-The database access approach and AI provider still need to be chosen. See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for the documented options and boundaries.
+- **Frontend:** React 18, Vite, JavaScript, and Tailwind CSS.
+- **Design System:** Outfit typography (sole product typeface per `DESIGN.md`), custom token palette, accessible reusable components.
+- **Backend:** Python (>=3.9) and FastAPI, structured as a modular monolith.
+- **Data and Persistence:** Supabase PostgreSQL with SQLAlchemy 2.x and Alembic migrations.
+- **Authentication:** Supabase Auth JWT verification.
+- **AI Extraction:** Vision provider adapter (Gemini / Claude).
+- **Matching:** Normalization pipeline and RapidFuzz matcher.
+- **Testing & Quality:** Vitest and React Testing Library for frontend; Pytest, HTTPX, and Ruff for backend.
 
 ## Project Structure
 
-This tree reflects the files currently present:
-
 ```text
 .
-├── README.md
-└── docs/
-    ├── AGENTS.md
-    ├── API.md
-    ├── ARCHITECTURE.md
-    ├── DATABASE.md
-    ├── DESIGN.md
-    └── PRD.md
+├── .env.example                       # Root environment variable template
+├── .gitignore                          # Git ignore rules for node, python, venv, secrets
+├── package.json                        # Monorepo/workspace scripts
+├── README.md                           # Project documentation and status
+├── docs/                               # Source of truth specifications
+│   ├── AGENTS.md                       # Contributor & agent engineering rules
+│   ├── API.md                          # REST API contract and specifications
+│   ├── ARCHITECTURE.md                 # Technical architecture
+│   ├── DATABASE.md                     # Persisted entities and schemas
+│   ├── DESIGN.md                       # Design system and UX rules
+│   └── PRD.md                          # Product requirements document
+├── frontend/                           # React + Vite client application
+│   ├── .env.example                    # Frontend environment template (VITE_* only)
+│   ├── .eslintrc.cjs                   # ESLint configuration
+│   ├── index.html                      # HTML entry with Outfit typography
+│   ├── package.json                    # Frontend dependencies and scripts
+│   ├── postcss.config.js               # PostCSS configuration
+│   ├── tailwind.config.js              # Tailwind design tokens from DESIGN.md
+│   ├── vite.config.js                  # Vite configuration and test setup
+│   ├── public/
+│   │   ├── assets/                     # Static assets
+│   │   └── fonts/outfit/               # Outfit font assets documentation
+│   └── src/
+│       ├── main.jsx                    # Application bootstrap
+│       ├── app/                        # Root App, router, and providers
+│       │   ├── App.jsx
+│       │   ├── providers.jsx
+│       │   └── router.jsx
+│       ├── components/                 # Shared UI components & design system
+│       │   ├── feedback/               # LoadingSpinner, Skeleton, Toast
+│       │   ├── forms/                  # FormField, Label, ErrorMessage
+│       │   ├── layout/                 # AppLayout, Header, Navigation, nav-items
+│       │   └── ui/                     # Button, Input, Card, Badge, Alert
+│       ├── features/                   # Domain features & route screens
+│       │   ├── auth/                   # LoginPage
+│       │   ├── barcodes/               # BarcodesPage
+│       │   ├── buying-copilot/         # BuyingCopilotPage
+│       │   ├── catalogue/              # CataloguePage
+│       │   ├── dashboard/              # DashboardPage, NotFoundPage
+│       │   ├── inventory/              # InventoryPage
+│       │   ├── invoices/               # InvoicesPage
+│       │   └── purchase-orders/        # PurchaseOrdersPage
+│       ├── hooks/                      # Shared hooks (useAuth)
+│       ├── lib/                        # api-client, supabase-client, formatting, validation
+│       ├── styles/                     # Tailwind index.css
+│       └── test/                       # Setup and smoke tests
+└── backend/                            # FastAPI modular monolith web service
+    ├── .env.example                    # Backend environment template
+    ├── alembic.ini                     # Alembic migration configuration
+    ├── pyproject.toml                  # Backend project manifest and ruff/pytest config
+    ├── README.md                       # Backend documentation
+    ├── requirements.txt                # Production dependencies
+    ├── requirements-dev.txt            # Development and test dependencies
+    └── app/
+        ├── main.py                     # FastAPI application factory and endpoints
+        ├── api/                        # API dependencies and v1 modular router
+        │   ├── dependencies.py
+        │   └── router.py
+        ├── core/                       # Core configuration, errors, logging, security
+        │   ├── config.py
+        │   ├── errors.py
+        │   ├── logging.py
+        │   └── security.py
+        ├── db/                         # Database connection, models, migrations
+        │   ├── base.py
+        │   ├── session.py
+        │   ├── migrations/             # Alembic migration environment and versions
+        │   ├── models/                 # SQLAlchemy declarative models
+        │   └── repositories/           # Base and domain data repositories
+        ├── integrations/               # External adapters (Supabase, vision, storage, OFF)
+        │   ├── open_food_facts.py
+        │   ├── storage.py
+        │   ├── supabase_auth.py
+        │   └── vision_provider.py
+        ├── modules/                    # Modular domain routers
+        │   ├── auth/
+        │   ├── barcodes/
+        │   ├── buying_copilot/
+        │   ├── catalogue/
+        │   ├── inventory/
+        │   ├── invoices/
+        │   ├── purchase_orders/
+        │   └── stores/
+        ├── schemas/                    # Standard API response envelopes and schemas
+        │   └── common.py
+        └── tests/                      # Pytest suite
+            ├── conftest.py
+            ├── test_config.py
+            └── test_health.py
 ```
-
-There are no frontend, backend, migration, or test directories yet.
 
 ## Prerequisites
 
-There is no runnable local application at present. The documented architecture anticipates:
-
-- Node.js and a package manager for the planned Vite frontend.
-- Python for the planned FastAPI backend.
-- A Supabase project for PostgreSQL, authentication, and private storage.
-- An AI provider account and key if invoice extraction is implemented.
-
-Required versions and provider choices have not been established in repository configuration.
+- **Node.js:** v20.x or higher with `npm`
+- **Python:** 3.9+ with `venv` and `pip`
+- **Supabase Account:** for PostgreSQL, Supabase Auth, and private Storage
+- **AI Provider Key:** (e.g., Google Gemini) for invoice extraction
 
 ## Getting Started
 
-Local setup is **pending**: this repository has no application source, dependency manifests, lockfiles, `.env.example`, database migrations, or run scripts. Therefore, installation, database setup, and frontend/backend start commands cannot yet be verified or provided.
+### 1. Environment Setup
 
-No clone command is listed because this workspace has no configured Git remote. Once the application and its setup files exist, document their verified install, environment, migration, and run commands here.
+Copy example environment configurations:
 
-## Environment Variables
+```bash
+# Root template
+cp .env.example .env
 
-The following names are recommendations in [API.md](docs/API.md), not a verified runtime configuration. There is no `.env.example`; requiredness below reflects the API document and may change when implementation choices are finalized. Do not put secrets in source control or browser-visible `VITE_*` variables.
+# Frontend environment
+cp frontend/.env.example frontend/.env
 
-| Variable | Requiredness in API documentation | Purpose |
-| --- | --- | --- |
-| `APP_ENV` | Required | Runtime environment |
-| `API_V1_PREFIX` | Optional | API prefix; defaults to `/api/v1` |
-| `FRONTEND_ORIGINS` | Required | Allowed browser origins |
-| `SUPABASE_URL` | Required | Supabase project URL |
-| `SUPABASE_JWT_ISSUER` | Required | Expected JWT issuer/configuration |
-| `SUPABASE_JWKS_URL` | Depends on verification mode | JWT public-key discovery endpoint |
-| `DATABASE_URL` | Required | Server-side PostgreSQL connection |
-| `SUPABASE_SERVICE_ROLE_KEY` | Only if privileged server-side operations require it | Server-side Storage/Admin access |
-| `SUPABASE_STORAGE_BUCKET` | Required | Private invoice bucket |
-| `AI_PROVIDER`, `AI_PROVIDER_API_KEY`, `AI_MODEL` | Required for invoice extraction / selected provider | Provider identifier, secret, and model |
-| `AI_REQUEST_TIMEOUT_SECONDS`, `AI_MAX_RETRIES` | Optional | Provider timeout and bounded retries |
-| `OPEN_FOOD_FACTS_ENABLED`, `OPEN_FOOD_FACTS_BASE_URL` | Optional | Optional product lookup toggle and base URL |
-| `LOG_LEVEL`, `RATE_LIMIT_ENABLED` | Optional | Logging level and API rate-limiting toggle |
-| `RATE_LIMIT_STORE_URL` | Only if a shared limiter is selected | Shared rate-limit backend connection |
-| `VITE_API_BASE_URL`, `VITE_SUPABASE_URL` | Required for the documented frontend | API base URL and Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | Depends on the configured Supabase client | Public client key, if required by the SDK |
+# Backend environment
+cp backend/.env.example backend/.env
+```
 
-Never expose `DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, or `AI_PROVIDER_API_KEY` in frontend configuration.
+### 2. Frontend Setup
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend will run locally on `http://localhost:5173`.
+
+### 3. Backend Setup
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+uvicorn app.main:app --reload --port 8000
+```
+
+The backend API will run on `http://localhost:8000`. Interactive OpenAPI documentation is available in development at `http://localhost:8000/docs`.
+
+### 4. Convenient Root Workspace Scripts
+
+From the repository root:
+
+| Command | Action |
+| --- | --- |
+| `npm run dev:frontend` | Launch Vite frontend development server |
+| `npm run dev:backend` | Launch FastAPI development server |
+| `npm run build` | Build static frontend production bundle |
+| `npm run lint` | Run ESLint on frontend and Ruff on backend |
+| `npm run test` | Run Vitest unit tests and Pytest suite |
+
+## Quality & Verification
+
+All quality gates are verified and pass:
+
+- **Frontend Build:** `npm --prefix frontend run build` completes successfully.
+- **Frontend Tests:** `npm --prefix frontend run test` passes with Vitest.
+- **Frontend Linting:** `npm --prefix frontend run lint` passes with ESLint.
+- **Backend Tests:** `pytest` passes with HTTPX async fixtures covering `/health`, `/ready`, and error envelopes.
+- **Backend Linting:** `ruff check .` passes with zero warnings.
 
 ## API and Documentation
 
-- [Product requirements](docs/PRD.md)
-- [Design](docs/DESIGN.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Database design](docs/DATABASE.md)
-- [API contract](docs/API.md)
-- [Contributor guidance](docs/AGENTS.md)
-
-The architecture proposes FastAPI OpenAPI documentation in development, typically at `/docs`. No backend exists yet, so interactive API documentation is not currently available.
-
-## Testing
-
-No test files, test dependencies, or test commands are present. The architecture proposes Pytest and HTTPX for the backend and Vitest with React Testing Library for the frontend; these are plans, not currently runnable suites.
-
-## Current Status
-
-This is a documentation-stage project, with the PRD marked draft for implementation. The repository does not yet include a working application, database schema migrations, environment template, or automated tests. The MVP scope is documented; implementation and several decisions remain pending.
-
-### Known Gaps
-
-- No application code, dependency/setup manifests, migrations, or tests.
-- No configured Git remote or clone URL in this workspace.
-- The AI provider/model, database access implementation, and some product decisions must be finalized before setup instructions can be made concrete.
+- [Product requirements (PRD)](docs/PRD.md)
+- [Design system (DESIGN)](docs/DESIGN.md)
+- [Architecture (ARCHITECTURE)](docs/ARCHITECTURE.md)
+- [Database design (DATABASE)](docs/DATABASE.md)
+- [API contract (API)](docs/API.md)
+- [Contributor guidance (AGENTS)](docs/AGENTS.md)
