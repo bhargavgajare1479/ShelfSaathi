@@ -78,16 +78,32 @@ export function InventoryPage() {
         Inventory is only modified through confirmed transactions such as supplier invoice intake. Every change is logged with an append-only stock movement record.
       </Alert>
 
-      {/* Search Bar */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search inventory by product name..."
-          className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-border bg-surface text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-        />
+      {/* Search Bar & Summary Stats */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="relative max-w-md w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search inventory by product name..."
+            className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-border bg-surface text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          />
+        </div>
+
+        {!isLoading && inventory.length > 0 && (
+          <div className="flex items-center gap-3 text-xs text-text-secondary">
+            <span className="font-semibold text-text-primary">{inventory.length}</span> items listed
+            <span className="inline-block w-1 h-1 rounded-full bg-border" />
+            <span className="text-success font-medium">
+              {inventory.filter((i) => (i.quantity_on_hand ?? 0) > 3).length} Healthy
+            </span>
+            <span className="inline-block w-1 h-1 rounded-full bg-border" />
+            <span className="text-warning font-medium">
+              {inventory.filter((i) => (i.quantity_on_hand ?? 0) > 0 && (i.quantity_on_hand ?? 0) <= 3).length} Low
+            </span>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -119,58 +135,75 @@ export function InventoryPage() {
           </Link>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {inventory.map((item) => (
-            <Card
-              key={item.id}
-              className="p-4 hover:border-primary/50 hover:shadow-elevation-1 transition-all flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="min-w-0">
-                    <h3 className="text-base font-bold text-text-primary truncate">
-                      {item.product_name}
-                    </h3>
-                    {item.brand && (
-                      <span className="text-xs text-text-muted">Brand: {item.brand}</span>
-                    )}
-                  </div>
-                  {item.barcode && (
-                    <Badge variant="neutral" className="text-[10px] font-mono">
-                      {item.barcode}
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="mt-4 p-3 bg-surface-muted rounded-xl flex items-baseline justify-between">
-                  <span className="text-xs font-semibold text-text-secondary">On Hand</span>
-                  <div className="text-right">
-                    <span className="text-2xl font-black text-text-primary">
-                      {item.quantity_on_hand}
-                    </span>
-                    <span className="text-xs font-medium text-text-secondary ml-1.5">
-                      {item.unit}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
-                <span className="text-text-muted text-[11px]">
-                  Updated {new Date(item.updated_at).toLocaleDateString()}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleViewMovements(item)}
-                  className="inline-flex items-center gap-1 text-primary hover:text-primary-hover font-semibold"
-                >
-                  <History className="w-3.5 h-3.5" />
-                  <span>Audit History</span>
-                </button>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <Card className="overflow-hidden p-0 border border-border shadow-elevation-1">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-surface-muted/60 border-b border-border text-xs uppercase font-semibold text-text-secondary tracking-wider">
+                <tr>
+                  <th className="px-4 py-3">Product Name &amp; Brand</th>
+                  <th className="px-4 py-3">Barcode</th>
+                  <th className="px-4 py-3">Unit</th>
+                  <th className="px-4 py-3 text-right">On-Hand Stock</th>
+                  <th className="px-4 py-3">Last Updated</th>
+                  <th className="px-4 py-3 text-right">Audit Trail</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {inventory.map((item) => {
+                  const stock = item.quantity_on_hand ?? 0
+                  return (
+                    <tr
+                      key={item.id}
+                      className="hover:bg-surface-muted/40 transition-colors"
+                    >
+                      <td className="px-4 py-3 font-medium text-text-primary">
+                        <div className="font-semibold text-text-primary">{item.product_name}</div>
+                        {item.brand && (
+                          <span className="text-xs text-text-muted">Brand: {item.brand}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {item.barcode ? (
+                          <span className="font-mono text-xs text-text-secondary bg-surface-muted px-2 py-0.5 rounded border border-border">
+                            {item.barcode}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-text-muted italic">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-text-secondary capitalize">
+                        {item.unit || 'piece'}
+                      </td>
+                      <td className="px-4 py-3 text-right font-medium">
+                        <Badge
+                          variant={stock <= 0 ? 'danger' : stock <= 3 ? 'warning' : 'success'}
+                          className="font-mono font-bold text-xs"
+                        >
+                          {stock} {item.unit || 'pcs'}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-text-muted whitespace-nowrap">
+                        {item.updated_at ? new Date(item.updated_at).toLocaleDateString() : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewMovements(item)}
+                          className="inline-flex items-center gap-1.5 text-xs text-primary hover:text-primary-hover font-semibold"
+                          title="View Stock Movement Audit Trail"
+                        >
+                          <History className="w-3.5 h-3.5" />
+                          <span>Audit History</span>
+                        </Button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       )}
 
       {/* Movements Audit Modal */}

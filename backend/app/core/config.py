@@ -70,7 +70,7 @@ class Settings(BaseSettings):
         default=None,
         description="AI provider API key",
     )
-    AI_MODEL: str = Field(default="gemini-1.5-flash", description="Vision model identifier")
+    AI_MODEL: str = Field(default="gemini-flash-lite-latest", description="Vision model identifier")
     AI_REQUEST_TIMEOUT_SECONDS: int = Field(default=30, description="AI request timeout")
     AI_MAX_RETRIES: int = Field(default=2, description="Bounded retries for AI calls")
 

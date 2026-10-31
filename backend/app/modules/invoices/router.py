@@ -7,7 +7,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile
 from fastapi.responses import Response
 from PIL import Image
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_store, get_request_id, require_store_role
@@ -469,16 +469,26 @@ async def confirm_invoice(
 
         # If flagged as new product or missing product_id, auto-create catalogue product
         if line.review_status == "new_product" or not line.product_id:
-            new_prod = Product(
-                id=uuid.uuid4(),
-                store_id=store_uuid,
-                name=line.raw_description.strip(),
-                unit=line.unit.strip() if line.unit else "piece",
-            )
-            db.add(new_prod)
-            db.flush()
-            line.product_id = new_prod.id
-            line.review_status = "matched"
+            existing = db.scalars(
+                select(Product).where(
+                    Product.store_id == store_uuid,
+                    func.lower(Product.name) == func.lower(line.raw_description.strip()),
+                )
+            ).first()
+            if existing:
+                line.product_id = existing.id
+                line.review_status = "matched"
+            else:
+                new_prod = Product(
+                    id=uuid.uuid4(),
+                    store_id=store_uuid,
+                    name=line.raw_description.strip(),
+                    unit=line.unit.strip() if line.unit else "piece",
+                )
+                db.add(new_prod)
+                db.flush()
+                line.product_id = new_prod.id
+                line.review_status = "matched"
 
         if line.quantity is None or line.quantity <= 0:
             raise ValidationException(
