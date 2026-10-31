@@ -24,4 +24,3 @@ async def list_products(
         pagination=PaginationMeta(limit=limit, next_cursor=None),
         request_id=request_id,
     )
-

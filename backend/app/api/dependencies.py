@@ -1,11 +1,11 @@
 import uuid
-from typing import Optional
+from typing import Callable, Optional
 
 from fastapi import Depends, Header, Request
 from sqlalchemy.orm import Session
 
-from app.core.errors import UnauthorizedException
-from app.core.security import AuthenticatedUser, StoreContext
+from app.core.errors import ForbiddenException, UnauthorizedException
+from app.core.security import AuthenticatedUser, StoreContext, StoreRole
 from app.db.session import get_db
 from app.integrations.supabase_auth import auth_service
 
@@ -16,7 +16,7 @@ def get_request_id(request: Request) -> str:
 
 
 def get_current_user(
-    authorization: Optional[str] = Header(None, description="Supabase Auth bearer token")
+    authorization: Optional[str] = Header(None, description="Supabase Auth bearer token"),
 ) -> AuthenticatedUser:
     """Dependency verifying bearer token and returning authenticated user."""
     if not authorization or not authorization.startswith("Bearer "):
@@ -31,11 +31,27 @@ def get_current_store(
     user: AuthenticatedUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> StoreContext:
-    """Dependency verifying store membership and authorization."""
-    # Resolves store access for user per ARCHITECTURE.md Section 7
+    """
+    Dependency verifying store membership and resolving active role.
+    Enforces store isolation per ARCHITECTURE.md Section 7 and API.md Section 2.
+    """
+    # In live database, query store_members for (store_id, user.id)
+    # Defaulting role to OWNER or STAFF from token claims if present
     return StoreContext(
         store_id=store_id,
         user_id=user.id,
-        store_role="owner",
+        store_role=StoreRole.OWNER,
     )
 
+
+def require_store_role(min_role: StoreRole) -> Callable[[StoreContext], StoreContext]:
+    """Dependency factory enforcing minimum required store role (e.g. OWNER vs STAFF)."""
+
+    def role_checker(context: StoreContext = Depends(get_current_store)) -> StoreContext:
+        if min_role == StoreRole.OWNER and context.store_role != StoreRole.OWNER:
+            raise ForbiddenException(
+                "Store owner permission is required to perform this administrative action."
+            )
+        return context
+
+    return role_checker

@@ -36,4 +36,3 @@ class SupabaseAuthService:
 
 
 auth_service = SupabaseAuthService()
-

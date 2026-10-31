@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     ShelfSaathi Application Settings.
     Environment variable loader conforming to ARCHITECTURE.md and API.md.
     """
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -85,4 +86,3 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Return cached settings instance."""
     return Settings()
-

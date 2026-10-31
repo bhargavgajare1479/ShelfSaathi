@@ -13,7 +13,8 @@ The project foundation is initialized according to the approved architecture in 
 - **Backend:** Python (>=3.9) and FastAPI, structured as a modular monolith.
 - **Data and Persistence:** Supabase PostgreSQL with SQLAlchemy 2.x and Alembic migrations.
 - **Authentication:** Supabase Auth JWT verification.
-- **AI Extraction:** Vision provider adapter (Gemini / Claude).
+- **AI Extraction:** Google Gemini Vision API (`gemini-1.5-flash`) via integration adapter.
+- **Access Control:** Multi-user store permissions with `owner` and `staff` roles.
 - **Matching:** Normalization pipeline and RapidFuzz matcher.
 - **Testing & Quality:** Vitest and React Testing Library for frontend; Pytest, HTTPX, and Ruff for backend.
 
@@ -88,9 +89,21 @@ The project foundation is initialized according to the approved architecture in 
         │   ├── base.py
         │   ├── session.py
         │   ├── migrations/             # Alembic migration environment and versions
-        │   ├── models/                 # SQLAlchemy declarative models
+        │   │   ├── env.py
+        │   │   ├── script.py.mako
+        │   │   └── versions/
+        │   │       └── 0001_initial_schema.py
+        │   ├── models/                 # SQLAlchemy declarative models (all DATABASE.md tables)
+        │   │   ├── inventory.py
+        │   │   ├── invoice.py
+        │   │   ├── product.py
+        │   │   ├── purchase_order.py
+        │   │   ├── sales_record.py
+        │   │   ├── stock_movement.py
+        │   │   ├── store.py
+        │   │   └── store_member.py
         │   └── repositories/           # Base and domain data repositories
-        ├── integrations/               # External adapters (Supabase, vision, storage, OFF)
+        ├── integrations/               # External adapters (Supabase, Gemini vision, storage, OFF)
         │   ├── open_food_facts.py
         │   ├── storage.py
         │   ├── supabase_auth.py
@@ -109,7 +122,8 @@ The project foundation is initialized according to the approved architecture in 
         └── tests/                      # Pytest suite
             ├── conftest.py
             ├── test_config.py
-            └── test_health.py
+            ├── test_health.py
+            └── test_store_roles.py
 ```
 
 ## Prerequisites

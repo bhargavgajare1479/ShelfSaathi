@@ -28,4 +28,3 @@ async def test_unauthorized_route(client: AsyncClient):
     assert "error" in payload
     assert payload["error"]["code"] == "UNAUTHORIZED"
     assert "request_id" in payload
-

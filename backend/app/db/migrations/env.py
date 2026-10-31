@@ -1,13 +1,16 @@
-import os
 import sys
 from logging.config import fileConfig
+from pathlib import Path
+
+# Ensure backend root is on Python module search path
+backend_dir = Path(__file__).resolve().parents[3]
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-# Append backend directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
+import app.db.models  # noqa: F401 - Register all models with Base.metadata
 from app.core.config import get_settings
 from app.db.base import Base
 
@@ -61,4 +64,3 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-

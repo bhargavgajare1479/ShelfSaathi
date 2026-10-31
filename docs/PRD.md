@@ -135,7 +135,9 @@ Secondary capabilities should support this workflow rather than distract from it
 - Generate labels where permitted.
 - Escalate purchasing decisions to the owner.
 
-**Assumption A-01:** Employee accounts may be supported in the initial product, but the minimum viable implementation may use a single store-owner account. The team must approve whether separate employee roles are required for the hackathon MVP.
+**Decision (Approved):** Multi-user staff permissions are implemented in the MVP. Store access is managed through store memberships with two distinct roles:
+- **`owner` (Store Owner / Admin):** Full administrative control, including managing store members, confirming invoices and applying inventory updates, catalogue adjustments, and purchase-order approvals.
+- **`staff` (Store Staff / Employee):** Day-to-day operational access, including capturing/uploading invoices, reviewing extracted line items, scanning manufacturer barcodes, printing label sheets, and viewing inventory. Staff can prepare purchase-order drafts but cannot manage store memberships or perform owner-restricted administrative actions.
 
 ### 3.4 Future Stakeholder: Supplier or Distributor
 

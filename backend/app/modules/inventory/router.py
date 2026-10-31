@@ -20,4 +20,3 @@ async def list_inventory(
         pagination=PaginationMeta(limit=limit, next_cursor=None),
         request_id=request_id,
     )
-

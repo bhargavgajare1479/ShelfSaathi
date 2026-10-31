@@ -99,7 +99,7 @@ one backend service.
 | Database access    | SQLAlchemy 2.x or psycopg with a small repository layer                                     | Keeps SQL and transaction boundaries out of route handlers                                          |
 | Migrations         | Alembic                                                                                     | Versioned, reviewable schema changes                                                                |
 | Image processing   | Pillow, only where needed                                                                   | Image resizing, format validation, and preprocessing                                                |
-| Invoice AI         | A vision-capable Gemini or Claude model, selected through an adapter                        | Extracts invoice line items from images; provider can be changed without rewriting workflow logic   |
+| Invoice AI         | Google Gemini Vision API (`gemini-1.5-flash`), accessed through an adapter                  | Extracts invoice line items from images; adapter keeps provider swappable                            |
 | Product matching   | RapidFuzz plus deterministic normalisation rules                                            | Efficient fuzzy matching of invoice descriptions against the store catalogue                        |
 | Barcode scanning   | ZXing-compatible browser library                                                            | Reads manufacturer barcodes using the device camera where supported                                 |
 | Barcode generation | JsBarcode on the frontend or a backend library if server-generated output is required       | Generates common retail barcode formats for labels                                                  |
@@ -423,9 +423,10 @@ Every protected request must establish:
 3. Whether the caller has permission to perform the requested action.
 4. Whether the target resource belongs to that store.
 
-For a single-merchant MVP, keep roles minimal. If the PRD requires
-multiple staff members, use explicit store membership and role checks.
-Do not invent a complex permission engine without a product requirement.
+For the MVP, multi-user staff permissions are implemented using explicit store
+membership and role checks. Supported roles are `owner` (full store administration,
+member management, stock confirmation) and `staff` (invoice capture, line review,
+barcode lookup, label printing, and draft creation).
 
 ### 7.3 Store isolation
 
@@ -660,7 +661,7 @@ for a store's price, stock, or purchase history.
 | Supabase Auth           | User authentication and session issuance   | FastAPI independently validates access tokens                                       |
 | Supabase PostgreSQL     | Application data                           | Server-side access only; migrations are version controlled                          |
 | Supabase Storage        | Private invoice image storage, if selected | No public invoice bucket; validate access and file metadata                         |
-| Gemini or Claude Vision | Invoice field extraction                   | One provider selected through an adapter; review required for all extracted lines   |
+| Google Gemini Vision   | Invoice field extraction                   | Google Gemini API (`gemini-1.5-flash`) through adapter; review required for all lines |
 | Open Food Facts         | Optional barcode/product metadata lookup   | Missing data is normal; provide manual fallback                                     |
 | Vercel                  | Frontend hosting                           | No secrets in client-exposed environment variables                                  |
 | Render                  | Backend hosting                            | Store secrets in managed environment settings; configure health checks and timeouts |
@@ -1016,7 +1017,8 @@ feedback to justify complexity.
 | Backend              | FastAPI + Python                              | Suitable for REST APIs, document processing, and AI integrations |
 | Database             | Supabase PostgreSQL                           | Managed relational persistence                                   |
 | Authentication       | Supabase Auth                                 | Avoids custom credential management                              |
-| AI                   | One vision-capable provider behind an adapter | Reduces initial complexity and vendor coupling                   |
+| AI                   | Google Gemini API (`gemini-1.5-flash`)        | Approved vision-capable provider behind an adapter               |
+| Roles / Permissions  | Multi-user: `owner` and `staff`               | Scoped per store via `store_members` table                       |
 | Matching             | Deterministic normalisation + RapidFuzz       | Makes candidate matching inspectable and testable                |
 | Stock calculations   | Deterministic backend logic                   | Inventory arithmetic must not depend on LLM output               |
 | Invoice confirmation | Merchant-approved and transactional           | Prevents unreviewed or duplicate stock changes                   |

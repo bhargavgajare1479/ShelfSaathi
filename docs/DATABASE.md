@@ -149,14 +149,14 @@ Maps Supabase Auth users to stores and assigns a minimal role.
 | `id`         | `uuid`          | Primary key, default generated UUID           | Membership identifier       |
 | `store_id`   | `uuid`          | Not null, FK to `stores.id`, cascade delete   | Store                       |
 | `user_id`    | `uuid`          | Not null, references Supabase Auth user ID    | Authenticated user          |
-| `role`       | `text`          | Not null, constrained to approved role values | Store-level permission role |
+| `role`       | `text`          | Not null, constrained to `owner` or `staff`   | Store-level permission role |
 | `created_at` | `timestamptz`   | Not null, default current timestamp           | Membership creation time    |
 
 Constraints:
 
 - Unique (`store_id`, `user_id`).
-- Role values must match the roles approved in `PRD.md`.
-- Do not invent a large role hierarchy. For an owner-only MVP, use the smallest role set that works.
+- Check constraint: `CHECK (role IN ('owner', 'staff'))`.
+- Supported roles: `owner` (full store administration, member management, stock confirmation) and `staff` (operational intake, line review, barcode, draft creation).
 
 The exact foreign-key reference to the Supabase-managed user table must
 follow the selected Supabase schema and migration permissions. Do not

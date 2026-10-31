@@ -84,25 +84,22 @@ grant access to a store.
 
 ### 2.3 Role policy
 
-The exact role vocabulary must match the approved product requirements
-and `store_members` schema. Until roles are finalised, use a central
-authorization policy rather than hard-coding role checks across routes.
+The MVP implements multi-user store permissions with two distinct roles in `store_members`:
+- `owner`: Store owner/admin with full authority.
+- `staff`: Store staff/employee with operational privileges.
 
-Recommended MVP permission defaults, to confirm before implementation:
+Approved MVP permissions:
 
-| Action                            | Store owner/admin | Authorised staff                     |
-| --------------------------------- | ----------------- | ------------------------------------ |
-| Read catalogue and inventory      | Yes               | Yes                                  |
-| Create/edit products              | Yes               | If permitted by approved role policy |
-| Upload and review invoices        | Yes               | If permitted by approved role policy |
-| Confirm invoice and apply stock   | Yes               | If permitted by approved role policy |
-| Generate barcode labels           | Yes               | Yes                                  |
-| Read reorder suggestions          | Yes               | Yes                                  |
-| Create/edit purchase-order drafts | Yes               | If permitted by approved role policy |
-| Manage store membership           | Yes               | No                                   |
-
-If the MVP supports only one user per store, the same checks still
-apply, with membership restricted accordingly.
+| Action                            | Store owner (`owner`) | Store staff (`staff`) |
+| --------------------------------- | --------------------- | --------------------- |
+| Read catalogue and inventory      | Yes                   | Yes                   |
+| Create/edit products              | Yes                   | Yes                   |
+| Upload and review invoices        | Yes                   | Yes                   |
+| Confirm invoice and apply stock   | Yes                   | No (Owner required)   |
+| Generate barcode labels           | Yes                   | Yes                   |
+| Read reorder suggestions          | Yes                   | Yes                   |
+| Create/edit purchase-order drafts | Yes                   | Yes                   |
+| Manage store membership & staff   | Yes                   | No                    |
 
 ### 2.4 Unauthenticated routes
 

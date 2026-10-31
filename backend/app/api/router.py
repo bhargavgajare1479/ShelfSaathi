@@ -19,4 +19,3 @@ api_v1_router.include_router(inventory_router)
 api_v1_router.include_router(barcodes_router)
 api_v1_router.include_router(buying_copilot_router)
 api_v1_router.include_router(purchase_orders_router)
-

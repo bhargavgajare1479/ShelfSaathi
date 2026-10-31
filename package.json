@@ -4,22 +4,18 @@
   "private": true,
   "description": "ShelfSaathi mobile-first AI inventory and purchasing assistant for kirana stores and small retailers",
   "scripts": {
-    "dev": "npm --prefix frontend run dev",
-    "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "npm run dev:frontend",
+    "dev:frontend": "cd frontend && npm run dev",
     "dev:backend": "cd backend && source .venv/bin/activate && uvicorn app.main:app --reload --port 8000",
-    "build": "npm --prefix frontend run build",
-    "lint:frontend": "npm --prefix frontend run lint",
+    "build": "cd frontend && npm run build",
+    "lint:frontend": "cd frontend && npm run lint",
     "lint:backend": "cd backend && source .venv/bin/activate && ruff check .",
     "lint": "npm run lint:frontend && npm run lint:backend",
-    "test:frontend": "npm --prefix frontend run test",
+    "test:frontend": "cd frontend && npm test",
     "test:backend": "cd backend && source .venv/bin/activate && pytest",
     "test": "npm run test:frontend && npm run test:backend"
   },
-  "workspaces": [
-    "frontend"
-  ],
   "engines": {
     "node": ">=20.0.0"
   }
 }
-

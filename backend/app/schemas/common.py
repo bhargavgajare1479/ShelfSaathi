@@ -12,12 +12,14 @@ class PaginationMeta(BaseModel):
 
 class SuccessResponse(BaseModel, Generic[DataT]):
     """Standard single-resource response envelope."""
+
     data: DataT
     request_id: str = Field(description="Unique request correlation identifier")
 
 
 class PaginatedResponse(BaseModel, Generic[DataT]):
     """Standard paginated collection response envelope."""
+
     data: list[DataT]
     pagination: PaginationMeta
     request_id: str = Field(description="Unique request correlation identifier")
@@ -39,6 +41,6 @@ class ErrorPayload(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Standard error response envelope conforming to API.md."""
+
     error: ErrorPayload
     request_id: str = Field(description="Unique request correlation identifier")
-

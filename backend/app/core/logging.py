@@ -22,4 +22,3 @@ def setup_logging() -> None:
 
 
 logger = logging.getLogger("shelfsaathi")
-

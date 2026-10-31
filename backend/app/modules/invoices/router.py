@@ -23,4 +23,3 @@ async def list_invoices(
         pagination=PaginationMeta(limit=limit, next_cursor=None),
         request_id=request_id,
     )
-

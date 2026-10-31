@@ -15,4 +15,3 @@ class StorageAdapter:
 
 
 storage_service = StorageAdapter()
-

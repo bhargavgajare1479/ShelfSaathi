@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, Query
 
 from app.api.dependencies import get_current_user, get_request_id
@@ -19,4 +18,3 @@ async def get_reorder_suggestions(
         data=[],
         request_id=request_id,
     )
-

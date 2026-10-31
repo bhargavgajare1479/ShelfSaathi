@@ -24,4 +24,3 @@ class BaseRepository(Generic[ModelT]):
         """Fetch entities scoped to a specific store."""
         stmt = select(self.model_class).filter_by(store_id=store_id).limit(limit)
         return self.db.scalars(stmt).all()
-

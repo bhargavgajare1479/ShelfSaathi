@@ -23,4 +23,3 @@ async def lookup_barcode(
         },
         request_id=request_id,
     )
-

@@ -12,6 +12,7 @@ from app.schemas.common import ErrorDetail, ErrorPayload, ErrorResponse
 
 class AppException(Exception):
     """Base application exception with status code and machine-readable error code."""
+
     def __init__(
         self,
         code: str,
@@ -69,6 +70,7 @@ class ConflictException(AppException):
 
 class RequestIdMiddleware(BaseHTTPMiddleware):
     """Middleware attaching request_id to request state and response headers."""
+
     async def dispatch(self, request: Request, call_next):
         request_id = request.headers.get("X-Request-ID") or f"req_{uuid.uuid4().hex[:12]}"
         request.state.request_id = request_id
@@ -135,4 +137,3 @@ def register_error_handlers(app: FastAPI) -> None:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content=error_resp.model_dump(),
         )
-

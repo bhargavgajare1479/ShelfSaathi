@@ -9,4 +9,3 @@ def test_settings_defaults():
     assert "http://localhost:5173" in settings.cors_origins
     assert settings.SUPABASE_STORAGE_BUCKET == "invoices"
     assert settings.AI_PROVIDER == "gemini"
-
