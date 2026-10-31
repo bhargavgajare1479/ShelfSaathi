@@ -43,6 +43,10 @@ class Settings(BaseSettings):
         default=None,
         description="Supabase JWKS endpoint for token validation",
     )
+    SUPABASE_JWT_SECRET: Optional[str] = Field(
+        default=None,
+        description="Supabase JWT secret for HS256 signature verification",
+    )
     SUPABASE_SERVICE_ROLE_KEY: Optional[str] = Field(
         default=None,
         description="Service role key for server-side privileged storage operations",

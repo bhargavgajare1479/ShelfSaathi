@@ -1,3 +1,4 @@
+import jwt
 import pytest
 from httpx import AsyncClient
 
@@ -13,6 +14,14 @@ from app.db.models import (
     Store,
     StoreMember,
 )
+
+
+def create_test_token(
+    user_id: str = "11111111-1111-1111-1111-111111111111",
+    email: str = "test@kirana.store",
+):
+    claims = {"sub": user_id, "email": email, "role": "authenticated"}
+    return jwt.encode(claims, "a-secret-key-that-is-at-least-32-bytes-long", algorithm="HS256")
 
 
 def test_models_metadata_registered():
@@ -41,3 +50,25 @@ async def test_store_members_unauthorized(client: AsyncClient):
     response = await client.get(f"/api/v1/stores/{store_id}/members")
     assert response.status_code == 401
     assert response.json()["error"]["code"] == "UNAUTHORIZED"
+
+
+@pytest.mark.asyncio
+async def test_get_me_authenticated(client: AsyncClient):
+    """Test /api/v1/me returns user details and store memberships when authenticated."""
+    token = create_test_token()
+    response = await client.get("/api/v1/me", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["email"] == "test@kirana.store"
+    assert "stores" in data
+    assert isinstance(data["stores"], list)
+
+
+@pytest.mark.asyncio
+async def test_list_stores_authenticated(client: AsyncClient):
+    """Test /api/v1/stores returns authorized stores."""
+    token = create_test_token()
+    response = await client.get("/api/v1/stores", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert isinstance(data, list)

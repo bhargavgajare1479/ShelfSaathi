@@ -14,22 +14,31 @@ class SupabaseAuthService:
     def verify_token(self, token: str) -> AuthenticatedUser:
         """
         Verify incoming Supabase access token.
-        In development, provides test fallback if JWKS/secret is not yet configured.
+        Uses SUPABASE_JWT_SECRET for signature verification when provided,
+        with development decoding fallback.
         """
         if not token:
             raise UnauthorizedException("No token provided")
 
         try:
-            # Decode token claims (unverified fallback for development stubbing if needed)
-            unverified_claims = jwt.decode(token, options={"verify_signature": False})
-            user_id = unverified_claims.get("sub")
+            if self.settings.SUPABASE_JWT_SECRET:
+                claims = jwt.decode(
+                    token,
+                    self.settings.SUPABASE_JWT_SECRET,
+                    algorithms=["HS256"],
+                    options={"verify_aud": False},
+                )
+            else:
+                claims = jwt.decode(token, options={"verify_signature": False})
+
+            user_id = claims.get("sub")
             if not user_id:
                 raise UnauthorizedException("Invalid token claims: missing subject")
 
             return AuthenticatedUser(
                 id=user_id,
-                email=unverified_claims.get("email"),
-                role=unverified_claims.get("role", "authenticated"),
+                email=claims.get("email"),
+                role=claims.get("role", "authenticated"),
             )
         except jwt.PyJWTError as exc:
             raise UnauthorizedException(f"Token validation failed: {str(exc)}") from exc

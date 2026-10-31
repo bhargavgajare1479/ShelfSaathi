@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { AppLayout } from '../components/layout/AppLayout'
+import { ProtectedRoute } from '../features/auth/ProtectedRoute'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
 import { NotFoundPage } from '../features/dashboard/NotFoundPage'
 import { LoginPage } from '../features/auth/LoginPage'
@@ -13,15 +14,20 @@ import { PurchaseOrdersPage } from '../features/purchase-orders/PurchaseOrdersPa
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <AppLayout />,
+    element: <ProtectedRoute />,
     children: [
-      { index: true, element: <DashboardPage /> },
-      { path: 'invoices', element: <InvoicesPage /> },
-      { path: 'catalogue', element: <CataloguePage /> },
-      { path: 'inventory', element: <InventoryPage /> },
-      { path: 'barcodes', element: <BarcodesPage /> },
-      { path: 'buying-copilot', element: <BuyingCopilotPage /> },
-      { path: 'purchase-orders', element: <PurchaseOrdersPage /> },
+      {
+        element: <AppLayout />,
+        children: [
+          { index: true, element: <DashboardPage /> },
+          { path: 'invoices', element: <InvoicesPage /> },
+          { path: 'catalogue', element: <CataloguePage /> },
+          { path: 'inventory', element: <InventoryPage /> },
+          { path: 'barcodes', element: <BarcodesPage /> },
+          { path: 'buying-copilot', element: <BuyingCopilotPage /> },
+          { path: 'purchase-orders', element: <PurchaseOrdersPage /> },
+        ],
+      },
     ],
   },
   {
