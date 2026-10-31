@@ -1,8 +1,12 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Optional
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+ROOT_DIR = BACKEND_DIR.parent
 
 
 class Settings(BaseSettings):
@@ -12,7 +16,11 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(
+            str(BACKEND_DIR / ".env"),
+            str(ROOT_DIR / ".env"),
+            ".env",
+        ),
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -20,7 +28,7 @@ class Settings(BaseSettings):
     APP_ENV: str = Field(default="development", description="Runtime environment")
     API_V1_PREFIX: str = Field(default="/api/v1", description="API route prefix")
     FRONTEND_ORIGINS: str = Field(
-        default="http://localhost:5173,http://localhost:3000",
+        default="http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000",
         description="Allowed frontend origins for CORS",
     )
 
@@ -42,6 +50,10 @@ class Settings(BaseSettings):
     SUPABASE_JWKS_URL: Optional[str] = Field(
         default=None,
         description="Supabase JWKS endpoint for token validation",
+    )
+    SUPABASE_JWT_SECRET: Optional[str] = Field(
+        default=None,
+        description="Supabase JWT secret for HS256 signature verification",
     )
     SUPABASE_SERVICE_ROLE_KEY: Optional[str] = Field(
         default=None,

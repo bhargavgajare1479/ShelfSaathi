@@ -1,7 +1,5 @@
-import React from 'react'
+import { AuthProvider } from '../features/auth/AuthProvider'
 
 export function Providers({ children }) {
-  // Provider boundaries for future global context, notifications, query client, etc.
-  return <>{children}</>
+  return <AuthProvider>{children}</AuthProvider>
 }
-

@@ -36,6 +36,10 @@ wheels/
 htmlcov/
 coverage/
 
+# Local Storage Uploads
+storage_uploads/
+backend/storage_uploads/
+
 # Environments and Secrets
 .env
 .env.*

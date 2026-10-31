@@ -37,6 +37,7 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
+        allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -46,6 +47,17 @@ def create_app() -> FastAPI:
     register_error_handlers(app)
 
     # 4. Operational Endpoints (API.md Section 4.1)
+    @app.get("/", tags=["Operational"])
+    async def root():
+        """Root welcome endpoint providing service information and API links."""
+        return {
+            "name": "ShelfSaathi API",
+            "status": "online",
+            "version": "0.1.0",
+            "docs_url": "/docs",
+            "health_url": "/health",
+        }
+
     @app.get("/health", tags=["Operational"])
     async def health_check():
         """Liveness check confirming the backend process is running."""
