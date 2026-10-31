@@ -21,7 +21,10 @@ class SupabaseAuthService:
             raise UnauthorizedException("No token provided")
 
         try:
-            if self.settings.SUPABASE_JWT_SECRET:
+            if (
+                self.settings.SUPABASE_JWT_SECRET
+                and not self.settings.SUPABASE_JWT_SECRET.startswith("placeholder")
+            ):
                 claims = jwt.decode(
                     token,
                     self.settings.SUPABASE_JWT_SECRET,

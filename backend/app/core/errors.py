@@ -68,6 +68,20 @@ class ConflictException(AppException):
         )
 
 
+class ValidationException(AppException):
+    def __init__(
+        self,
+        message: str = "The request contains invalid fields.",
+        details: Optional[list[ErrorDetail]] = None,
+    ):
+        super().__init__(
+            code="VALIDATION_ERROR",
+            message=message,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            details=details,
+        )
+
+
 class RequestIdMiddleware(BaseHTTPMiddleware):
     """Middleware attaching request_id to request state and response headers."""
 
