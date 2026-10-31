@@ -45,4 +45,6 @@ class Product(Base):
     inventory = relationship(
         "Inventory", back_populates="product", uselist=False, cascade="all, delete-orphan"
     )
-    stock_movements = relationship("StockMovement", back_populates="product")
+    stock_movements = relationship(
+        "StockMovement", back_populates="product", cascade="all, delete-orphan"
+    )
