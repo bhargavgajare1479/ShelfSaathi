@@ -122,6 +122,26 @@ export function InvoiceReviewView({ invoice, onBack, onInvoiceUpdated }) {
     setError(null)
 
     try {
+      // Auto-save any pending edited line changes first
+      const pendingLineIds = Object.keys(editedLines)
+      for (const lineId of pendingLineIds) {
+        const updates = editedLines[lineId]
+        if (updates && Object.keys(updates).length > 0) {
+          const payload = { ...updates }
+          if (payload.quantity !== undefined) payload.quantity = parseFloat(payload.quantity) || null
+          if (payload.unit_cost !== undefined) payload.unit_cost = parseFloat(payload.unit_cost) || null
+          if (payload.line_total !== undefined) payload.line_total = parseFloat(payload.line_total) || null
+
+          await invoicesApi.updateInvoiceLine(
+            activeStore.id,
+            currentInvoice.id,
+            lineId,
+            payload,
+            token
+          )
+        }
+      }
+
       const confirmedInvoice = await invoicesApi.confirmInvoice(
         activeStore.id,
         currentInvoice.id,
@@ -278,20 +298,32 @@ export function InvoiceReviewView({ invoice, onBack, onInvoiceUpdated }) {
 
       {/* Confirmation Success Alert */}
       {confirmSuccess && (
-        <Alert variant="success" title="Invoice Confirmed &amp; Stock Updated">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-1">
-            <span>
-              All verified lines have been atomically applied to on-hand inventory. An audit record was written to stock movements.
-            </span>
-            <Link
-              to="/inventory"
-              className="inline-flex items-center gap-1 text-xs font-bold text-success hover:underline flex-shrink-0"
-            >
-              <Boxes className="w-4 h-4" />
-              <span>View Updated Inventory &rarr;</span>
+        <Card className="p-4 bg-success/10 border-success/30 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-success text-white rounded-xl">
+              <PackageCheck className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-text-primary">Stock Added to Inventory!</h3>
+              <p className="text-xs text-text-secondary">
+                All lines from this bill have been atomically credited to on-hand inventory and logged in stock movements.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <Link to="/inventory">
+              <Button variant="primary" size="sm" className="bg-success hover:bg-success-hover text-white border-none flex items-center gap-1.5">
+                <Boxes className="w-4 h-4" />
+                <span>View Inventory</span>
+              </Button>
+            </Link>
+            <Link to="/catalogue">
+              <Button variant="outline" size="sm">
+                <span>Catalogue</span>
+              </Button>
             </Link>
           </div>
-        </Alert>
+        </Card>
       )}
 
       {/* Human Review Boundary Notice */}
