@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     APP_ENV: str = Field(default="development", description="Runtime environment")
     API_V1_PREFIX: str = Field(default="/api/v1", description="API route prefix")
     FRONTEND_ORIGINS: str = Field(
-        default="http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000",
+        default="http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000,https://shelf-saathi-77pj.vercel.app",
         description="Allowed frontend origins for CORS",
     )
 
