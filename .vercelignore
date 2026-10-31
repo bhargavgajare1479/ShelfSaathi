@@ -1,0 +1,11 @@
+.git
+.venv
+backend/.venv
+node_modules
+frontend/node_modules
+sample_invoices
+storage_uploads
+.pytest_cache
+__pycache__
+*.pyc
+docs
