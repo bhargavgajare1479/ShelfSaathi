@@ -59,5 +59,19 @@ export const invoicesApi = {
       token
     )
   },
+
+  /**
+   * Confirm reviewed invoice and atomically apply stock movements to inventory.
+   * Requires Store Owner role.
+   */
+  async confirmInvoice(storeId, invoiceId, token) {
+    return apiRequest(
+      `/stores/${storeId}/invoices/${invoiceId}/confirm`,
+      {
+        method: 'POST',
+      },
+      token
+    )
+  },
 }
 

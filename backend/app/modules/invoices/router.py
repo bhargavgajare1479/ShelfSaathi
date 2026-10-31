@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 from decimal import Decimal
 from io import BytesIO
 from typing import Optional
@@ -9,10 +10,10 @@ from PIL import Image
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import get_current_store, get_request_id
+from app.api.dependencies import get_current_store, get_request_id, require_store_role
 from app.core.errors import ConflictException, NotFoundException, ValidationException
-from app.core.security import StoreContext
-from app.db.models import Invoice, InvoiceLine, Product
+from app.core.security import StoreContext, StoreRole
+from app.db.models import Inventory, Invoice, InvoiceLine, Product, StockMovement
 from app.db.session import get_db
 from app.integrations.storage import storage_service
 from app.integrations.vision_provider import get_vision_provider
@@ -423,6 +424,109 @@ async def reprocess_invoice(
 
     db.commit()
     db.refresh(invoice)
+    response_data = await _build_invoice_response(invoice)
+    return SuccessResponse(data=response_data, request_id=request_id)
+
+
+@router.post("/{invoice_id}/confirm", response_model=SuccessResponse[InvoiceResponse])
+async def confirm_invoice(
+    store_id: str = Path(..., description="Store UUID"),
+    invoice_id: str = Path(..., description="Invoice UUID"),
+    context: StoreContext = Depends(require_store_role(StoreRole.OWNER)),
+    db: Session = Depends(get_db),
+    request_id: str = Depends(get_request_id),
+):
+    """
+    Confirm reviewed invoice and atomically apply stock movements to inventory.
+    Requires Store Owner role per PRD Table 3.3 and API.md Section 2.3.
+    Conforms to API.md Section 4.5 and DATABASE.md Section 6.
+    """
+    try:
+        inv_uuid = uuid.UUID(invoice_id)
+        store_uuid = uuid.UUID(context.store_id)
+    except ValueError:
+        raise NotFoundException("Invoice not found") from None
+
+    stmt = select(Invoice).where(Invoice.id == inv_uuid, Invoice.store_id == store_uuid)
+    invoice = db.scalars(stmt).first()
+    if not invoice:
+        raise NotFoundException("Invoice not found")
+
+    # Idempotent return: if already confirmed, do not apply stock twice
+    if invoice.status == "confirmed":
+        response_data = await _build_invoice_response(invoice)
+        return SuccessResponse(data=response_data, request_id=request_id)
+
+    if not invoice.lines:
+        raise ValidationException("Cannot confirm an invoice with zero line items.")
+
+    now_utc = datetime.now(timezone.utc)
+
+    # Process all lines atomically
+    for line in invoice.lines:
+        if line.review_status == "ignored":
+            continue
+
+        # If flagged as new product or missing product_id, auto-create catalogue product
+        if line.review_status == "new_product" or not line.product_id:
+            new_prod = Product(
+                id=uuid.uuid4(),
+                store_id=store_uuid,
+                name=line.raw_description.strip(),
+                unit=line.unit.strip() if line.unit else "piece",
+            )
+            db.add(new_prod)
+            db.flush()
+            line.product_id = new_prod.id
+            line.review_status = "matched"
+
+        if line.quantity is None or line.quantity <= 0:
+            raise ValidationException(
+                f"Line #{line.line_number} '{line.raw_description}' requires a positive quantity."
+            )
+
+        # Update or create Inventory record
+        inv_stmt = select(Inventory).where(
+            Inventory.store_id == store_uuid,
+            Inventory.product_id == line.product_id,
+        )
+        inv_record = db.scalars(inv_stmt).first()
+        qty_delta = Decimal(str(line.quantity))
+
+        if not inv_record:
+            inv_record = Inventory(
+                id=uuid.uuid4(),
+                store_id=store_uuid,
+                product_id=line.product_id,
+                quantity_on_hand=qty_delta,
+                updated_at=now_utc,
+            )
+            db.add(inv_record)
+        else:
+            inv_record.quantity_on_hand += qty_delta
+            inv_record.updated_at = now_utc
+
+        # Record audit stock movement (uq_stock_movements_invoice_line prevents duplicates)
+        movement = StockMovement(
+            id=uuid.uuid4(),
+            store_id=store_uuid,
+            product_id=line.product_id,
+            invoice_id=invoice.id,
+            invoice_line_id=line.id,
+            movement_type="invoice_restock",
+            quantity_delta=qty_delta,
+            reference_key=f"inv_{invoice.id}_line_{line.line_number}",
+            created_at=now_utc,
+        )
+        db.add(movement)
+
+    invoice.status = "confirmed"
+    invoice.confirmed_at = now_utc
+    invoice.updated_at = now_utc
+
+    db.commit()
+    db.refresh(invoice)
+
     response_data = await _build_invoice_response(invoice)
     return SuccessResponse(data=response_data, request_id=request_id)
 

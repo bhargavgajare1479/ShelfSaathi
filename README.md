@@ -26,6 +26,8 @@ The project foundation is initialized according to the approved architecture in 
 ├── .gitignore                          # Git ignore rules for node, python, venv, secrets
 ├── package.json                        # Monorepo/workspace scripts
 ├── README.md                           # Project documentation and status
+├── supabase/
+│   └── schema.sql                      # Production Supabase PostgreSQL schema with RLS & Storage
 ├── docs/                               # Source of truth specifications
 │   ├── AGENTS.md                       # Contributor & agent engineering rules
 │   ├── API.md                          # REST API contract and specifications
@@ -56,13 +58,13 @@ The project foundation is initialized according to the approved architecture in 
 │       │   ├── layout/                 # AppLayout, Header, Navigation, nav-items
 │       │   └── ui/                     # Button, Input, Card, Badge, Alert
 │       ├── features/                   # Domain features & route screens
-│       │   ├── auth/                   # LoginPage
+│       │   ├── auth/                   # LoginPage, AuthProvider, ProtectedRoute, StoreOnboardingModal
 │       │   ├── barcodes/               # BarcodesPage
 │       │   ├── buying-copilot/         # BuyingCopilotPage
 │       │   ├── catalogue/              # CataloguePage
 │       │   ├── dashboard/              # DashboardPage, NotFoundPage
-│       │   ├── inventory/              # InventoryPage
-│       │   ├── invoices/               # InvoicesPage
+│       │   ├── inventory/              # InventoryPage, inventory api client
+│       │   ├── invoices/               # InvoicesPage, UploadInvoiceModal, InvoiceReviewView, api client
 │       │   └── purchase-orders/        # PurchaseOrdersPage
 │       ├── hooks/                      # Shared hooks (useAuth)
 │       ├── lib/                        # api-client, supabase-client, formatting, validation
@@ -109,20 +111,25 @@ The project foundation is initialized according to the approved architecture in 
         │   ├── supabase_auth.py
         │   └── vision_provider.py
         ├── modules/                    # Modular domain routers
-        │   ├── auth/
-        │   ├── barcodes/
-        │   ├── buying_copilot/
-        │   ├── catalogue/
-        │   ├── inventory/
-        │   ├── invoices/
-        │   ├── purchase_orders/
-        │   └── stores/
+        │   ├── auth/                   # /api/v1/me user & store discovery
+        │   ├── barcodes/               # Barcodes router
+        │   ├── buying_copilot/         # Buying Copilot router
+        │   ├── catalogue/              # Product catalogue router
+        │   ├── inventory/              # Store inventory & stock movement audit router
+        │   ├── invoices/               # Invoice intake, matching.py, router.py (confirm/extract/patch)
+        │   ├── purchase_orders/        # Draft purchase orders router
+        │   └── stores/                 # Store profile & multi-user membership management
         ├── schemas/                    # Standard API response envelopes and schemas
-        │   └── common.py
+        │   ├── common.py
+        │   ├── inventory.py
+        │   └── invoices.py
         └── tests/                      # Pytest suite
             ├── conftest.py
             ├── test_config.py
             ├── test_health.py
+            ├── test_inventory.py
+            ├── test_invoice_confirmation.py
+            ├── test_invoice_extraction.py
             └── test_store_roles.py
 ```
 

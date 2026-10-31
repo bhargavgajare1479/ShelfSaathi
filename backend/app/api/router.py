@@ -6,7 +6,7 @@ from app.modules.buying_copilot.router import router as buying_copilot_router
 from app.modules.catalogue.router import router as catalogue_router
 from app.modules.inventory.router import router as inventory_router
 from app.modules.invoices.router import preview_router
-from app.modules.invoices.router import preview_router, router as invoices_router
+from app.modules.invoices.router import router as invoices_router
 from app.modules.purchase_orders.router import router as purchase_orders_router
 from app.modules.stores.router import router as stores_router
 

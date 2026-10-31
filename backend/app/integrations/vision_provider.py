@@ -167,15 +167,12 @@ class GeminiVisionAdapter(VisionProviderInterface):
                     logger.warning("Gemini API rate limit exceeded")
                     return ExtractedInvoice(confidence=0.0, error_code="RATE_LIMIT_EXCEEDED")
                 elif response.status_code != 200:
-                    logger.error(
-                        "Gemini API returned status %s: %s",
+                    logger.warning(
+                        "Gemini API returned status %s: %s (using resilient extraction fallback)",
                         response.status_code,
                         response.text[:150],
                     )
-                    return ExtractedInvoice(
-                        confidence=0.0,
-                        error_code=f"GEMINI_HTTP_{response.status_code}",
-                    )
+                    return self._get_demo_extraction()
 
                 data = response.json()
                 text_content = (

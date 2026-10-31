@@ -20,8 +20,10 @@ def create_test_token(
     user_id: str = "11111111-1111-1111-1111-111111111111",
     email: str = "test@kirana.store",
 ):
+    from app.core.config import get_settings
+    secret = get_settings().SUPABASE_JWT_SECRET or "a-secret-key-that-is-at-least-32-bytes-long"
     claims = {"sub": user_id, "email": email, "role": "authenticated"}
-    return jwt.encode(claims, "a-secret-key-that-is-at-least-32-bytes-long", algorithm="HS256")
+    return jwt.encode(claims, secret, algorithm="HS256")
 
 
 def test_models_metadata_registered():
